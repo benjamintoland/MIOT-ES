@@ -30,8 +30,9 @@ int main(int argc, char* argv[]){
    }
    printf("Starting the makeBIGLED program\n");
    printf("The current gpio49 Path is: " GPIO_PATH "\n");
+	writeGPIO("/unexport","49");
         writeGPIO("/export", "49");
-	writeGPIO("/direction", "out");	
+	writeGPIO("/gpio49/direction", "out");	
 printf("gpio49direction is out");
    // select whether command is on, off, flash or status
    if(strcmp(argv[1],"on")==0){
