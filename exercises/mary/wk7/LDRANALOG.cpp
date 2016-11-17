@@ -13,6 +13,7 @@
 #include<fstream>
 using namespace std;
 #define GPIO_PATH  "/sys/class/gpio"
+#define SLOTS "/sys/devices/bone_capemgr.9/slots"
 #define ANALOG_PATH "/sys/bus/iio/devices/iio:device0/in_voltage0_raw"
 void writeGPIO(string filename,string value)
 {
@@ -24,7 +25,15 @@ void writeGPIO(string filename,string value)
 cout << "written value is : " << value<< endl; 
 	fs.close();
 }
-
+void writeADC(string value)
+{
+	fstream fs;
+	string path(SLOTS);
+	fs.open((path).c_str(),fstream::out);
+	fs << value;
+cout << "BB-ADC sent to SLOTS" << endl;
+	fs.close();
+}
 //function to read value at  Analog pin 0
 int readANALOG(string filename)
 {
@@ -40,23 +49,17 @@ cout << "read filename is: " << path << "\n";
 	return 1;}
 	fs >> val;
 	cout<< "read value is : " << val<< endl;	
-/*fs.open((path + filename).c_str(),fstream::in);
-while(!fs.eof())
-{
-	//fs >>  val;	fs.get(ch);
-
-	val << ch;
-	cout << "read value is : " << val<< endl;*/
 	return (val);
 	fs.close();
 }
 int main(int argc, char* argv[]){
    if(argc!=1){
-	cout << "Usage is ./CPLUSLEDSW7: " << endl;;
+	cout << "Usage is ./LDRANALOG " << endl;;
               return 2;
    }
    cout << "Starting the SWITCHLED program" << endl;
    printf("The current gpio49 Path is: " GPIO_PATH "\n");
+		writeADC("BB-ADC");//write BB-ADC to SLOTS
 	writeGPIO("/unexport","49");
 	writeGPIO("/unexport","115");
         writeGPIO("/export", "49");//unexport and then export the 2 pins
