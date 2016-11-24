@@ -11,6 +11,7 @@ int main(int argc, char* argv[]){
    if(argc < 3)
    {
 	printf("Need to pass Reg AND Cmd parameters\n");
+	return(1);
    }
 
    if((file=open("/dev/i2c-1", O_RDWR)) < 0){
