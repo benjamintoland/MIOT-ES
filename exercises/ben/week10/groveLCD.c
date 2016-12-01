@@ -6,7 +6,8 @@
 
 int main(int argc, char* argv[]){
 
-   int file;
+   //test
+	int file;
 
    if(argc < 3)
    {
