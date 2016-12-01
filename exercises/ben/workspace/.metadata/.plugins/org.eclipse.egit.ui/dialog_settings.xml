@@ -15,9 +15,9 @@
 		<item value="136" key="DIALOG_Y_ORIGIN"/>
 	</section>
 	<section name="org.eclipse.egit.ui.COMMIT_DIALOG_SECTION">
-		<item value="628" key="DIALOG_WIDTH"/>
+		<item value="630" key="DIALOG_WIDTH"/>
 		<item value="1|Ubuntu|11.0|0|GTK|1|" key="DIALOG_FONT_NAME"/>
-		<item value="658" key="DIALOG_HEIGHT"/>
+		<item value="663" key="DIALOG_HEIGHT"/>
 		<item value="407" key="DIALOG_X_ORIGIN"/>
 		<item value="2" key="DIALOG_Y_ORIGIN"/>
 	</section>
