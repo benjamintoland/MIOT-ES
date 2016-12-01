@@ -1,0 +1,21 @@
+11:54:05 **** Incremental Build of configuration Debug for project hello2 ****
+make all 
+Building file: ../main.c
+Invoking: Cross GCC Compiler
+arm-linux-gnueabihf-gcc -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"main.d" -MT"main.d" -o "main.o" "../main.c"
+Finished building: ../main.c
+ 
+Building target: hello2
+Invoking: Cross GCC Linker
+arm-linux-gnueabihf-gcc  -o "hello2"  ./main.o   
+Finished building target: hello2
+ 
+11:54:44 **** Incremental Build of configuration Debug for project hello2 ****
+make all 
+make: Nothing to be done for 'all'.
+11:56:10 **** Incremental Build of configuration Debug for project hello2 ****
+make all 
+make: Nothing to be done for 'all'.
+11:56:27 **** Incremental Build of configuration Debug for project hello2 ****
+make all 
+make: Nothing to be done for 'all'.

@@ -1,0 +1,15 @@
+/*
+ * main.c
+ *
+ *  Created on: 30 Nov 2016
+ *      Author: ben
+ */
+
+#include <stdio.h>
+
+int main(void)
+{
+	printf("Hello from Beaglebone again!!!\n");
+
+	return 0;
+}
