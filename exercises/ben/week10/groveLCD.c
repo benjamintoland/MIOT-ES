@@ -8,6 +8,7 @@ int main(int argc, char* argv[]){
 
    int file;
 
+
    if(argc < 3)
    {
 	printf("Need to pass Reg AND Cmd parameters\n");
