@@ -17,7 +17,7 @@ void writeGPIO(char filename[], char value[]);
 int readGPIO(char filename[]);
 int main(int argc, char* argv[]){
    if(argc!=1){
-	printf("Usage is ./LEDSWITCHEX6B\n");
+	printf("Usage is ALSO./LEDSWITCHEX6B\n");
               return 2;
    }
    printf("Starting the SWITCHLED program\n");
