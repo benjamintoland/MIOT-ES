@@ -15,7 +15,7 @@ I am trying to modify this program to get the separate BIGLED to flash-MC*
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
-
+//hello
 #define GPIO_PATH  "/sys/class/gpio"
 
 void writeGPIO(char filename[], char value[]);
