@@ -7,6 +7,8 @@
 #include<iostream>
 #include<unistd.h> //for usleep
 #include"GPIO.h"
+#include"PWM.h"
+#include "I2CDevice.h"
 #include<fstream>
 #include<string>
 #include<sstream>
@@ -32,36 +34,59 @@ int main(){
 	}
 	if(system("echo bone_pwm_P9_22 > $SLOTS"))
 		{
-			cout << "PWM  already loaded" << endl;
+			cout << "PWM  DTO already loaded" << endl;
 		}
-	if(system("echo am33xx_pwm > $SLOTS"))
-			{
-				cout << "AMx33pwm already loaded" << endl;
-			}
+	else
+	{
 
-   GPIO outGPIO(14), inGPIO(2);//gpio(2) is J6 rx (SERV0 CONTROL INPUT), gpio(14) is j2 rx (LED CONTROL OUTPUT)
-   outGPIO.setDirection(OUTPUT);
-   outGPIO.setValue(LOW);
-   cout << "Starting the readLDR program" << endl;
-   while(1){
-   int value = readAnalog(0);
+		cout << "PWM  DTO has just been loaded, now for am33xx..." << endl;
+		system("echo am33xx_pwm > $SLOTS");
+	}
+
+	PWM pwm("pwm_test_P9_22.13");
+		GPIO outGPIO(14), inGPIO(2);//gpio(2) is J6 rx (SERV0 CONTROL INPUT), gpio(14) is j2 rx (LED CONTROL OUTPUT)
+		outGPIO.setDirection(OUTPUT);
+		outGPIO.setValue(LOW);
+		 cout << "heater off:" << endl;
+
+   pwm.setPeriod(20000000);         // Set the period in ns, 20ms
+   	     pwm.setDutyCycle(5.0f);       // Set the duty 5%
+   	     pwm.setPolarity(PWM::ACTIVE_HIGH);
+   	     cout << "vent closed:" << endl;// using active low PWM
+   	     pwm.run();
+   cout << "Starting the readTHermistor program" << endl;
+   while(1)
+   {
+
+	   usleep (5000000);// there was a bit of bounce.
+	   int value = readAnalog(0);
    cout << "The Thermistor value was " << value << " out of 4275." << endl;
    float R= 4096.0/((float)value)-1.0;
    R = 100000.0*R;
    float temperature =1.0/(log(R/10000.0)/B+1/298.15)-273.15;// convert an val to temp C.
    cout << "Temerature is : " << temperature << "Degrees Celcius" << endl;
    usleep(500000);
-   if (value < 1100)
+   if ((value >1150)&&(value <1250))
+   {
+	   pwm.setDutyCycle(5.0f); //low duty cycle,9 o clock..
+	   outGPIO.setValue(LOW);
+	   cout << "heater still off:" << endl;
+	   cout << "vent closed:" << endl;
+   }
+
+   else if (value <= 1150)
    {
 	   outGPIO.setValue(HIGH);
-	   cout << "turn on heater" << endl;
+	   cout << "heater ON!" << endl;
    }
-   else
+   else if (value >= 1250)
    {
 	   outGPIO.setValue(LOW);
-	   cout << "put on a jumper if you're cold!" << endl;
+	   cout << "very hot,turn off heater!" << endl;
+	   pwm.setDutyCycle(13.0f);//duty 75%
+	   	     cout << "vent open" << endl;// servo at 3 o clock i hope..
    }
-   }
+
 
  /*  // Basic Output - Flash the LED 10 times, once per second
    outGPIO.setDirection(OUTPUT);
@@ -83,5 +108,7 @@ int main(){
    }
    outGPIO.streamClose();
 */
+   }
    return 0;
+
 }
