@@ -13,9 +13,11 @@
 #include<string>
 #include<sstream>
 #include <math.h>
+#include <pthread.h>
 using namespace exploringBB;
 using namespace std;
 #define TEMP_PATH "/sys/bus/iio/devices/iio:device0/in_voltage"
+//#define SLOTS "/sys/devices/bone_capemgr.9/slots" This line can be added in case SLOTS not set up on BBB.
 const int B =4275;
 int readAnalog(int number){
    stringstream ss;
@@ -26,12 +28,35 @@ int readAnalog(int number){
    fs.close();
    return number;
 }
+int callbackFunction(int var){
+	cout << "BBB Button Pressed!" << var << endl;
+	/*if(var%2 ==0)
+	{
+		system("/usr/sbin/ntpdate -b -s -u ie.pool.ntp.org");
+				system("date");
+				usleep(500000);
+				var=1;
+	}
+
+	else
+	{
+		cout << "The temp is:??? *****************" << endl;
+		var=0;
+	}
+*/
+			return var;
+}
 
 int main(){
+
 	if(system("echo BB-ADC > $SLOTS"))
 	{
 		cout << "BB-ADC DTO already loaded" << endl;
 	}
+	/*if(system("echo i2c1togpio > $SLOTS"))
+		{
+			cout << "i2ctoGPIO already loaded" << endl;
+		}*/
 	if(system("echo bone_pwm_P9_22 > $SLOTS"))
 		{
 			cout << "PWM  DTO already loaded" << endl;
@@ -41,9 +66,21 @@ int main(){
 
 		cout << "PWM  DTO has just been loaded, now for am33xx..." << endl;
 		system("echo am33xx_pwm > $SLOTS");
+		system("echo i2c1togpio > $SLOTS");
 	}
+	// I2CDevice i2cdevice("I2C2 _P9_17");//*************************check pin !!!******************
+		PWM pwm("pwm_test_P9_22.13");
+	//cout << "BeagleBone Poll Test" << endl;
 
-	PWM pwm("pwm_test_P9_22.13");
+		GPIO inGPIObut(5);//all I need is a dto to make i2c1 into gpio5! easy ..:)
+		//GPIO outGPIO(4);
+
+		inGPIObut.setDirection(INPUT);
+		inGPIObut.setEdgeType(RISING);
+
+		//outGPIO.setDirection(OUTPUT);
+
+		cout << "GPIO(5) has value: " << inGPIObut.getValue() << endl;
 		GPIO outGPIO(14), inGPIO(2);//gpio(2) is J6 rx (SERV0 CONTROL INPUT), gpio(14) is j2 rx (LED CONTROL OUTPUT)
 		outGPIO.setDirection(OUTPUT);
 		outGPIO.setValue(LOW);
@@ -55,17 +92,27 @@ int main(){
    	     cout << "vent closed:" << endl;// using active low PWM
    	     pwm.run();
    cout << "Starting the readTHermistor program" << endl;
+  int repcount =0;
    while(1)
    {
-
-	   usleep (5000000);// there was a bit of bounce.
+	   /*cout << "GPIO(5) has value: " << inGPIObut.getValue() << endl;
+	  inGPIObut.setDebounceTime(200);
+	 int count= (inGPIObut.waitForEdge(&callbackFunction)+1);
+	   		count+=1;
+	   	  cout << "Poll Started: Press the button:" << endl;
+	   	   usleep(10000);
+	   	   cout << "Finished sleeping for .10 seconds" << endl;*/
+	   usleep (5000);// there was a bit of bounce.
 	   int value = readAnalog(0);
    cout << "The Thermistor value was " << value << " out of 4275." << endl;
    float R= 4096.0/((float)value)-1.0;
    R = 100000.0*R;
-   float temperature =1.0/(log(R/10000.0)/B+1/298.15)-273.15;// convert an val to temp C.
+   float temperature =1.0/(log(R/100000.0)/B+1/298.15)-273.15;// convert an val to temp C.
+
+     //   float R = 1023.0/((float)a)-1.0;
+      R = 100000.0*R;
    cout << "Temerature is : " << temperature << "Degrees Celcius" << endl;
-   usleep(500000);
+   usleep(50000);
    if ((value >1150)&&(value <1250))
    {
 	   pwm.setDutyCycle(5.0f); //low duty cycle,9 o clock..
@@ -77,38 +124,37 @@ int main(){
    else if (value <= 1150)
    {
 	   outGPIO.setValue(HIGH);
-	   cout << "heater ON!" << endl;
+	   cout << "heater ON, vent CLOSED!" << endl;
    }
    else if (value >= 1250)
    {
 	   outGPIO.setValue(LOW);
-	   cout << "very hot,turn off heater!" << endl;
-	   pwm.setDutyCycle(13.0f);//duty 75%
-	   	     cout << "vent open" << endl;// servo at 3 o clock i hope..
+	   	   pwm.setDutyCycle(13.0f);//duty 13%, I couldn't get it to work by specifying ns, should have rewatched video
+	   	     cout << "vent OPEN,heater OFF" << endl;// servo at 3 o clock i hope..
    }
 
 
- /*  // Basic Output - Flash the LED 10 times, once per second
-   outGPIO.setDirection(OUTPUT);
-   for (int i=0; i<10; i++){
-      outGPIO.setValue(HIGH);
-      usleep(500000); //micro-second sleep 0.5 seconds
-      outGPIO.setValue(LOW);
-      usleep(500000);
-   }
-   // Basic Input example
-   inGPIO.setDirection(INPUT);
-   cout << "The value of the input is: "<< inGPIO.getValue() << endl;
+   cout << "GPIO(5) has value: " << inGPIObut.getValue() << endl;
+ 	  inGPIObut.setDebounceTime(200);
+ 	 int count= inGPIObut.waitForEdge(&callbackFunction);
+ 	   		count+=1;
+ 	   		repcount +=count;
+ 	   	  cout << "Poll Started: Press the button:" << endl;
+ 	   	   usleep(10000000);
+ 	   	   cout << "Finished sleeping for 10 seconds" << endl;
+ 	   	if(repcount%2 ==0)
+ 	   		{
+ 	   			system("/usr/sbin/ntpdate -b -s -u ie.pool.ntp.org");
+ 	   					system("date");
+ 	   					usleep(500000);
+ 	   					 	   		}
 
-   // Fast write to GPIO 1 million times
-   outGPIO.streamOpen();
-   for (int i=0; i<1000000; i++){
-      outGPIO.streamWrite(HIGH);
-      outGPIO.streamWrite(LOW);
-   }
-   outGPIO.streamClose();
-*/
-   }
+ 	   		else
+ 	   		{
+ 	   			cout << "The temp is:??? *****************" << endl;
+ 	   			 	   		}
+}
+
    return 0;
 
 }

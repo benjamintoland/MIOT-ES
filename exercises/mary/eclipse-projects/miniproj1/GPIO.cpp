@@ -261,6 +261,7 @@ void* threadedPoll(void *value){
 }
 
 int GPIO::waitForEdge(CallbackType callback){
+	//int var;
 	this->threadRunning = true;
 	this->callbackFunction = callback;
     // create the thread, pass the reference, address of the function and data
