@@ -16,10 +16,9 @@
 #include <math.h>
 #include <pthread.h>
 #include <iomanip>
-//#include<sys/ioctl.h>
-#include<linux/i2c-dev.h>
-//#include<fcntl.h>
+#include <linux/i2c-dev.h>
 #include "I2CDevice.h"
+#include <ctime>
 using namespace exploringBB;
 using namespace std;
 #define TEMP_PATH "/sys/bus/iio/devices/iio:device0/in_voltage"
@@ -74,11 +73,11 @@ int callbackFunction(int var){
 int main(){
 	char buffer [16];
 	char buffer2 [16];
-	//int count=0;
-	//int *p;
-	//p=&count;
-
-	if(system("echo BB-ADC > $SLOTS"))
+	char buffer3 [16];
+//	time_t now = time(0);
+//	tm *ltm = localtime(&now);
+	sprintf(buffer3,"time is : teatime");//%d";,ltm->tm_hour.c_str());
+		if(system("echo BB-ADC > $SLOTS"))
 	{
 		cout << "BB-ADC DTO already loaded" << endl;
 	}
@@ -153,9 +152,8 @@ int main(){
 	   cout << "heater still off:" << endl;
 	   cout << "vent closed:" << endl;
 	   sprintf(buffer,"heatoff,ventcls");
-	  	   sprintf(buffer2, "temp nice. %s",s);
-	   cout << "Test value in buffer2 :" << s << endl;//correct value in buffer but still can't print:(
-	   lcd.writeRegister(0x80,0x80);//row 0, col 0
+	  	  	   sprintf(buffer2, "temp is: %s",s.c_str());
+	  	  	   lcd.writeRegister(0x80,0x80);//row 0, col 0
 	   	 int i=0;
 	   	 while(buffer[i]!='\0')
 	   	 {
@@ -167,10 +165,11 @@ int main(){
 	   		   	 while(buffer2[i]!='\0')
 	   		   	 {
 	   		   		lcd.writeRegister(0x40,buffer2[i]);//buffer one by one
-	   		   		i++;}
-	 }
+	   		   		i++;
+	   		   	 }
+   }
 
-   else if ((value <= 1150)&&(count%2==0))
+      else if ((value <= 1150)&&(count%2==0))
    {
 	   outGPIO.setValue(HIGH);
 	   cout << "heater ON, vent CLOSED!" << endl;
@@ -179,7 +178,7 @@ int main(){
 	   stringstream ss (stringstream::in | stringstream::out);
 	   	   ss << temperature;
 	   	   string test = ss.str();
-	   	   sprintf(buffer2,"temp is cool.:%s ",test );
+	   	   sprintf(buffer2,"temp is: %s ",test.c_str() );
 	   lcd.writeRegister(0x80,0x01);//clear screen
 	   lcd.writeRegister(0x80,0x80);//row 0, col 0
 	  	   	 int i=0;
@@ -206,7 +205,8 @@ int main(){
 	   	 	   	  	   stringstream ss (stringstream::in | stringstream::out);
 	   	  	   	   ss << temperature;
 	   	  	   	   string test = ss.str();
-	   	  	   	   sprintf(buffer2,"temp is hot.:%s ",test );
+	   	  	   	   sprintf(buffer2,"temp is: %s ",test.c_str() );
+	   	  	   	  cout << "value in buffer2 is " << test<< endl;
 	   	  	   lcd.writeRegister(0x80,0x01);//clear screen
 	   	  	   lcd.writeRegister(0x80,0x80);//row 0, col 0
 	   	  	  	   	 int i=0;
@@ -229,13 +229,12 @@ int main(){
 	rgb.writeRegister(0x08,0xFF);
 	rgb.writeRegister(0x01,0x20);
 	rgb.writeRegister(0x02,0x33);
-	sprintf(buffer," What time is it?");
-	   lcd.writeRegister(0x80,0x01);//clear screen
+	lcd.writeRegister(0x80,0x01);//clear screen
 	 	   	  	   lcd.writeRegister(0x80,0x80);//row 0, col 0
 	 	   	  	  	   	 int i=0;
-	 	   	  	  	   	 while(buffer[i]!='\0')
+	 	   	  	  	   	 while(buffer3[i]!='\0')
 	 	   	  	  	   	 {
-	 	   	  	  	   		lcd.writeRegister(0x40,buffer[i]);//buffer one by one
+	 	   	  	  	   		lcd.writeRegister(0x40,buffer3[i]);//buffer one by one
 	 	   	  	  	   		i++;
 	 	   	  	  	   	 }
 	 	   	  	  	rgb.writeRegister(0x02,0x00);
