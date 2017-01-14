@@ -19,12 +19,13 @@
 #include <linux/i2c-dev.h>
 #include "I2CDevice.h"
 #include <ctime>
+#include <time.h>
 using namespace exploringBB;
 using namespace std;
 #define TEMP_PATH "/sys/bus/iio/devices/iio:device0/in_voltage"
 #define SLOTS "/sys/devices/bone_capemgr.9/slots" //This line can be added in case SLOTS not set up on BBB.
 const int B =4275;
-int count=0;// couldn't do this any other way..
+int count=0;// couldn't do this any other way..god knows I tried..
 int readAnalog(int number){
    stringstream ss;
    ss << TEMP_PATH << number << "_raw";
@@ -35,28 +36,7 @@ int readAnalog(int number){
    return number;}
 /*void writeLCD(float temp)//gave up on this function.have to pass in buffer vals.
    {
-	char buffer [16];
-	char buffer2 [16];
-	//float temperature;
-	I2CDevice lcd(1,0x3E);
-	    	   stringstream ss (stringstream::in | stringstream::out);
- 	   	   ss << temp;
- 	   	   string test = ss.str();
- 	   	   sprintf(buffer2,"temp is:%s ",test );
- 	   lcd.writeRegister(0x80,0x01);//clear screen
- 	   lcd.writeRegister(0x80,0x80);//row 0, col 0
- 	  	   	 int i=0;
- 	  	   	 while(buffer[i]!='\0')
- 	  	   	 {
- 	  	   		lcd.writeRegister(0x40,buffer[i]);//buffer one by one
- 	  	   		i++;
- 	  	   	 }
- 	  	   	lcd.writeRegister(0x80,0xC0);//row 1, col 0
- 	  	   		   	 i=0;
- 	  	   		   	 while(buffer2[i]!='\0')
- 	  	   		   	 {
- 	  	   		   		lcd.writeRegister(0x40,buffer2[i]);//buffer one by one
- 	  	   		   		i++;
+
 }
    }*/
 int callbackFunction(int var){
@@ -122,28 +102,27 @@ int main(){
    	     pwm.setPolarity(PWM::ACTIVE_HIGH);
    	     cout << "start with vent closed:" << endl;// using active low PWM
    	     pwm.run();
-   	   inGPIObut.setDebounceTime(2000);
-   	    inGPIObut.waitForEdge(&callbackFunction);
-   	   cout << "count in main is ********" << count<< endl;
-   	   cout << "Poll Started: Press the button if you like:" << endl;
+   	     inGPIObut.setDebounceTime(2000);
+   	     inGPIObut.waitForEdge(&callbackFunction);
+   	     	 cout << "count in main is ********" << count<< endl;
+   	     	 cout << "Poll Started: Press the button if you like:" << endl;
    	      while(1)
-   {
-   	    	  cout << " count is " << count << endl;
-   	    	  cout << "Starting the readTHermistor program" << endl;
-	  	  			   		usleep(1000000);
+   	      {
+   	    	  //cout << " count is " << count << endl;
+   	       cout << "Starting the readTHermistor program" << endl;
+	  	   usleep(1000000);
 	  	   lcd.writeRegister(0x80,0x0F);//on with blinking
 	  	   lcd.writeRegister(0x80,0x28);//two line mode
-	  	   cout << "Finished sleeping for 5 seconds" << endl;
-	   	  	   	  int value = readAnalog(0);
-   cout << "The Thermistor value was " << value << " out of 4095." << endl;
-   float R= 4095.0/((float)value)-1.0;
-   R = 100000.0*R;
-   float temperature =1.0/(log(R/100000.0)/B+1/298.15)-263.15;// convert an val to temp C.
-          R = 100000.0*R;
-   cout << "Temperature is : " << temperature << "Degrees Celcius" << endl;
-   usleep(50000);
+	  	   int value = readAnalog(0);
+	   //cout << "The Thermistor value was " << value << " out of 4095." << endl;
+   	   float R= 4095.0/((float)value)-1.0;
+   	   R = 100000.0*R;
+   	   float temperature =1.0/(log(R/100000.0)/B+1/298.15)-263.15;// convert an val to temp C.
+       R = 100000.0*R;
+       cout << "Temperature is : " << temperature << "Degrees Celcius" << endl;
+   	   usleep(50000);
    	   stringstream stream;
-   	   stream << fixed<< setprecision(1) << temperature;
+   	   stream << fixed<< setprecision(1) << temperature;//temp to 1 dec place as a string
    	   string s = stream.str();// try this as well to get float to string into buffer
    if (((value >1150)&&(value <1250)&&(count%2==0)))
    {
@@ -151,20 +130,20 @@ int main(){
 	   outGPIO.setValue(LOW);
 	   cout << "heater still off:" << endl;
 	   cout << "vent closed:" << endl;
-	   sprintf(buffer,"heatoff,ventcls");
+	   	   	   sprintf(buffer,"heatoff,ventcls");
 	  	  	   sprintf(buffer2, "temp is: %s",s.c_str());
 	  	  	   lcd.writeRegister(0x80,0x80);//row 0, col 0
 	   	 int i=0;
 	   	 while(buffer[i]!='\0')
 	   	 {
-	   		lcd.writeRegister(0x40,buffer[i]);//buffer one by one
+	   		lcd.writeRegister(0x40,buffer[i]);//buffer message one by one
 	   		i++;
 	   	 }
 	   	lcd.writeRegister(0x80,0xC0);//row 1, col 0
 	   		   	 i=0;
 	   		   	 while(buffer2[i]!='\0')
 	   		   	 {
-	   		   		lcd.writeRegister(0x40,buffer2[i]);//buffer one by one
+	   		   		lcd.writeRegister(0x40,buffer2[i]);//buffer temp. one by one
 	   		   		i++;
 	   		   	 }
    }
@@ -173,40 +152,38 @@ int main(){
    {
 	   outGPIO.setValue(HIGH);
 	   cout << "heater ON, vent CLOSED!" << endl;
-	   sprintf(buffer," heatON,ventcls");
-	  // writeLCD(temperature);
-	   stringstream ss (stringstream::in | stringstream::out);
-	   	   ss << temperature;
-	   	   string test = ss.str();
-	   	   sprintf(buffer2,"temp is: %s ",test.c_str() );
+	   	  // writeLCD(temperature);
+	   	   	   stringstream stream;
+	      	   stream << fixed<< setprecision(1) << temperature;
+	      	   string test = stream.str();
+	      	   sprintf(buffer," heatON,ventCLS ");
+	      	   sprintf(buffer2,"temp is: %s ",test.c_str() );
 	   lcd.writeRegister(0x80,0x01);//clear screen
 	   lcd.writeRegister(0x80,0x80);//row 0, col 0
 	  	   	 int i=0;
 	  	   	 while(buffer[i]!='\0')
 	  	   	 {
-	  	   		lcd.writeRegister(0x40,buffer[i]);//buffer one by one
+	  	   		lcd.writeRegister(0x40,buffer[i]);//buffer message one by one
 	  	   		i++;
 	  	   	 }
-	  	   	lcd.writeRegister(0x80,0xC0);//row 1, col 0
+	   lcd.writeRegister(0x80,0xC0);//row 1, col 0
 	  	   		   	 i=0;
 	  	   		   	 while(buffer2[i]!='\0')
 	  	   		   	 {
-	  	   		   		lcd.writeRegister(0x40,buffer2[i]);//buffer one by one
-	  	   		   		i++;}
-
-
+	  	   		   		lcd.writeRegister(0x40,buffer2[i]);//buffer temp. one by one
+	  	   		   		i++;
+	  	   		   	 }
    }
    else if ((value >= 1250)&&(count%2==0))
    {
-	   outGPIO.setValue(LOW);
-	   	   pwm.setDutyCycle(13.0f);//duty 13%, I couldn't get it to work by specifying ns, should have rewatched video
-	   	     cout << "vent OPEN,heater OFF" << endl;// servo at 3 o clock i hope..
+	   	  outGPIO.setValue(LOW);
+	   	  pwm.setDutyCycle(13.0f);//duty 13%, I couldn't get it to work by specifying ns, should have rewatched video
+	   	  //  cout << "vent OPEN,heater OFF" << endl;// servo at 3 o clock approx.
 	   	  sprintf(buffer," heatOff,v open");
-	   	 	   	  	   stringstream ss (stringstream::in | stringstream::out);
-	   	  	   	   ss << temperature;
-	   	  	   	   string test = ss.str();
-	   	  	   	   sprintf(buffer2,"temp is: %s ",test.c_str() );
-	   	  	   	  cout << "value in buffer2 is " << test<< endl;
+	   	  stringstream stream;
+	   	   	   stream << fixed<< setprecision(1) << temperature;
+	   	   	   string s = stream.str();
+	   	  	   sprintf(buffer2,"temp is: %s ",s.c_str() );
 	   	  	   lcd.writeRegister(0x80,0x01);//clear screen
 	   	  	   lcd.writeRegister(0x80,0x80);//row 0, col 0
 	   	  	  	   	 int i=0;
@@ -215,30 +192,34 @@ int main(){
 	   	  	  	   		lcd.writeRegister(0x40,buffer[i]);//buffer one by one
 	   	  	  	   		i++;
 	   	  	  	   	 }
-	   	  	  	   	lcd.writeRegister(0x80,0xC0);//row 1, col 0
+	   	  	   lcd.writeRegister(0x80,0xC0);//row 1, col 0
 	   	  	  	   		   	 i=0;
 	   	  	  	   		   	 while(buffer2[i]!='\0')
 	   	  	  	   		   	 {
 	   	  	  	   		   		lcd.writeRegister(0x40,buffer2[i]);//buffer one by one
 	   	  	  	   		   		i++;
 	   	  	  	   		   	 }
-
 	   	  	  	   		   	 }
    else
-   {rgb.writeRegister(0x00,0x00);
-	rgb.writeRegister(0x08,0xFF);
-	rgb.writeRegister(0x01,0x20);
-	rgb.writeRegister(0x02,0x33);
-	lcd.writeRegister(0x80,0x01);//clear screen
-	 	   	  	   lcd.writeRegister(0x80,0x80);//row 0, col 0
-	 	   	  	  	   	 int i=0;
-	 	   	  	  	   	 while(buffer3[i]!='\0')
-	 	   	  	  	   	 {
-	 	   	  	  	   		lcd.writeRegister(0x40,buffer3[i]);//buffer one by one
-	 	   	  	  	   		i++;
-	 	   	  	  	   	 }
-	 	   	  	  	rgb.writeRegister(0x02,0x00);
-   }
-         }
+   {
+
+	   time_t now = time(0);
+	   struct tm * timeinfo;
+	   char buffer [32];
+	   time (&now);
+	   timeinfo = localtime (&now);
+	   strftime (buffer,32,"Time: %H:%M:%S",timeinfo);//i like to be early...
+	   puts (buffer);
+	   lcd.writeRegister(0x80,0xC0);//row 1, col 0
+	   int i=0;
+	   while(buffer[i]!='\0')
+	  	   {
+	  	   	lcd.writeRegister(0x40,buffer[i]);//buffer one by one
+	  	   	i++;
+	  	    }
+	 rgb.writeRegister(0x00,0x00);
+
+	 }
+    }
    return 0;
 }
