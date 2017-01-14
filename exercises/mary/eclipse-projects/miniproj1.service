@@ -1,0 +1,12 @@
+[Unit]
+Description=miniproject service
+Before=getty.target
+
+[Service]
+ExecStart=/usr/bin/miniproj1 /dev/ttyGS0
+SyslogIdentifier=miniproj1
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
