@@ -85,24 +85,63 @@ int main(int argc, char* argv[]) {
 // output data on LCD
 
 		system("echo i2c1togpio > $SLOTS"); //DTO where did this come from?
-		}
-		 I2CDevice lcd(1,0x3E);//messing around to figure out fix
-		 I2CDevice rgb(1,0x62);
+
+		 I2CDevice lcd(1,0x3E);// LCD address text
+		 I2CDevice rgb(1,0x62);// RGB address background colour
 		 lcd.open();
 		 rgb.open();
 		 lcd.writeRegister(0x80,0x01);//clear screen
 		 lcd.writeRegister(0x80,0x0F);//on with blinking
 		 lcd.writeRegister(0x80,0x28);//two line mode
-		 	 usleep (100000);
+		 	 usleep (500000); //sleep 0.5sec
 		 lcd.writeRegister(0x80,0x08);//turn off
-		 	rgb.writeRegister(0x00,0x00);
+		 	rgb.writeRegister(0x00,0x00);//initialising RGB background light
 		 	rgb.writeRegister(0x08,0xFF);
 		 	rgb.writeRegister(0x01,0x20);
-		 	rgb.writeRegister(0x03,0x33);
+		 	rgb.writeRegister(0x02,0x3F);// backlight blue
+
+		 	{
+		 		lcd.writeRegister(0x80,0xC0);//row 1, col 0
+		 			 i=0;
+		 			 while(buffer2[i]!='\0')
+		 			  	  {
+		 			  	   	lcd.writeRegister(0x40,buffer2[i]);//Display buffer temp
+		 			  	   		  i++;
+		 			  	   		   	 }
+		 	}
 
 		}
+		 	{
+
+// button using base code from CA support video 2
+		 	int callbackFunction(int var)
+		 		cout << "BBB Button Pressed!" << var << endl;
+		 		return var;
+
+
+		 	int main(){
+		 	   GPIO outGPIO(2), inGPIO(14);
+
+		 	   inGPIO.setDirection(INPUT);
+		 	   inGPIO.setEdgeType(RISING);
+
+		 	   cout << "Kicking off waiting thread..." << endl;
+		 	   inGPIO.waitForEdge(&callbackFunction);
+
+		 	   outGPIO.setDirection(OUTPUT);
+		 	   cout << "Kicking off blinking thread..." << endl;
+		 	   outGPIO.toggleOutput(20, 500);
+
+
+		 	    for (int i=0; i<10; i++){
+		 	       cout << "Button on Heater on, Vent Closed" << endl;
+		 	       usleep(1000000);
+		 	    }
+
+
+
 		sleep(1);
-	}
+
 	return 0;
 }
 
