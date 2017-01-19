@@ -15,7 +15,7 @@
 /plugin/;
 
 /{
-       compatible = "ti,beaglebone", "ti,beaglebone-black";
+       compatible = "ti,beaglebone", "ti,beaglebone-black"
        part-number = "EBB-GPIO-Example";
        version = "00A0";
 
