@@ -25,8 +25,8 @@
              __overlay__ {
                   ebb_example: EBB_GPIO_Example {
 			pinctrl-single,pins = <
-                                0x070 0x07  // P9_11 PINS$28 GPIO0_30 = 30 Output Mode7 pulldown
-                                0x074 0x37  // P9_13 PINS$29 GPIO0_31 = 31 Input Mode7 pullup 
+                                0x158 0x07  // P9_18 PINS$86 GPIO0_4 = 4 Output Mode7 pulldown 
+                                0x15c 0x27  // P9_17 PINS$87 GPIO0_5 = 5 Input Mode7 pullup 
   
                                /* OUTPUT  GPIO(mode7) 0x07 pulldown, 0x17 pullup, 0x?f no pullup/down */
 			       /* INPUT   GPIO(mode7) 0x27 pulldown, 0x37 pullup, 0x?f no pullup/down */
