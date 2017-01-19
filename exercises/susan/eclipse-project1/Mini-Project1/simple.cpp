@@ -84,7 +84,6 @@ int main(int argc, char* argv[]) {
 
 // output data on LCD
 
-		system("echo i2c1togpio > $SLOTS"); //DTO where did this come from?
 
 		 I2CDevice lcd(1,0x3E);// LCD address text
 		 I2CDevice rgb(1,0x62);// RGB address background colour
@@ -114,7 +113,11 @@ int main(int argc, char* argv[]) {
 		 	{
 
 // button using base code from CA support video 2
-		 	int callbackFunction(int var)
+
+		 		system("echo i2c1togpio > $SLOTS");
+//DTO skeleton from Derekmolloy Chp06, GPIO pins from BB Book page 212
+
+		 		int callbackFunction(int var)
 		 		cout << "BBB Button Pressed!" << var << endl;
 		 		return var;
 
