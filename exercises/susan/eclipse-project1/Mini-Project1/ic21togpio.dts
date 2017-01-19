@@ -23,7 +23,7 @@
              target = <&am33xx_pinmux>;
             
              __overlay__ {
-             
+     
                   ebb_example: EBB_GPIO_Example {
 			pinctrl-single,pins = <
                                 0x158 0x07  // P9_18 PINS$86 GPIO0_4 = 4 Output Mode7 pulldown 
