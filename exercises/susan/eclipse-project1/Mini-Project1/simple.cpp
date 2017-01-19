@@ -115,7 +115,7 @@ int main(int argc, char* argv[]) {
 // button using base code from CA support video 2
 
 		 		system("echo i2c1togpio > $SLOTS");
-//DTO skeleton from Derekmolloy Chp06, GPIO pins from BB Book page 212
+//DTO skeleton from Derekmolloy Chp06, GPIO pins from BB Book page212
 
 		 		int callbackFunction(int var)
 		 		cout << "BBB Button Pressed!" << var << endl;
