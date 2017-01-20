@@ -19,6 +19,7 @@ using namespace std;
 #include<stdlib.h>
 using namespace std;
 
+
 #define Temp_PATH "/sys/bus/iio/devices/iio:device0/in_voltage"
 
 GPIO outGPIO(14), inGPIO(2); // temp sensor connected to GPIO14, Servo GPIO2
@@ -41,6 +42,7 @@ float getTemperature(int adc_value) {
 
 int main(int argc, char* argv[]) {
 	int ain = 0;
+
 
 	//load the ADC DTO
 	system("echo BB-ADC > $SLOTS");
@@ -101,7 +103,7 @@ int main(int argc, char* argv[]) {
 
 		 	{
 		 		lcd.writeRegister(0x80,0xC0);//row 1, col 0
-		 			 i=0;
+		 			 i=0;}
 		 			 while(buffer2[i]!='\0')
 		 			  	  {
 		 			  	   	lcd.writeRegister(0x40,buffer2[i]);//Display buffer temp
@@ -112,17 +114,17 @@ int main(int argc, char* argv[]) {
 		}
 		 	{
 
+		 	}
+
 // button using base code from CA support video 2
 
 		 		system("echo i2c1togpio > $SLOTS");
 //DTO skeleton from Derekmolloy Chp06, GPIO pins BB Book page 212
 
-		 		int callbackFunction(int var)
+		 		int callbackFunction(int var);
 		 		cout << "BBB Button Pressed!" << var << endl;
 		 		return var;
 
-
-		 	int main(){
 		 	   GPIO outGPIO(2), inGPIO(14);
 
 		 	   inGPIO.setDirection(INPUT);
