@@ -18,7 +18,7 @@ int callbackFunction(int var){
 }
 
 int main(){
-   GPIO outGPIO(2), inGPIO(14);
+   GPIO outGPIO(14), inGPIO(4);	// LED out=2 UART2, Button in=14 UART1
 
    inGPIO.setDirection(INPUT);
    inGPIO.setEdgeType(RISING);
