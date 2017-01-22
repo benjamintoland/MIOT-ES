@@ -1,0 +1,24 @@
+# .service file to start a custom service on boot
+# Exploring BB Chapter 9 for method and Chapter 2 for internetOverUSB code
+# This starts internetOverUSB to get Date and Time at boot
+#
+# 1 Need to copy internetOverUSB to /usr/bin; cp internetOverUSB /usr/bin
+# 2 Then open services configuration directory; cd /lib/systemd/system
+# 3 Then add the contents of this file using; nano internetOverUSB.service
+# 4 To enable the service use systemctl call as follows;
+# 5 /lib/systemd/system# systemctl enable internetOverUSB.service
+# 6 /lib/systemd/system# systemctl start internetOverUSB.service
+# 7 /lib/systemd/system# systemctl status internetOverUSB.service
+
+[Unit]
+Description=internetOverUSB to get Time and date
+Before=getty.targetrm
+
+[Service]
+ExecStart=/usr/bin/internetOverUSB /dev/ttyGS0
+SyslogIdentifier=internetOverUSB
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

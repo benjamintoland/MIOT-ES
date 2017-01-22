@@ -1,0 +1,24 @@
+# .service file to start a custom service on boot
+# Exploring BB Chapter 9
+# This starts Mini-Project1 temperature program
+#
+# 1 Need to copy Mini-Project1 to /usr/bin; cp Mini-Project1 /usr/bin
+# 2 Then open services configuration directory; cd /lib/systemd/system
+# 3 Then add the contents of this file using; nano mini-project1.service
+# 4 To enable the service use systemctl call as follows;
+# 5 /lib/systemd/system# systemctl enable mini-project1.service
+# 6 /lib/systemd/system# systemctl start mini-project1.service
+# 7 /lib/systemd/system# systemctl status mini-project1.service
+
+[Unit]
+Description=Mini-Project1 Temperature Program
+Before=getty.targetrm 
+
+[Service]
+ExecStart=/usr/bin/Mini-Project1 /dev/ttyGS0
+SyslogIdentifier=Mini-Project1
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
