@@ -1,0 +1,152 @@
+[
+    {
+        "id": "d400c494.395b38",
+        "type": "tab",
+        "label": "Flow 1"
+    },
+    {
+        "id": "2ed361cd.1eacfe",
+        "type": "inject",
+        "z": "d400c494.395b38",
+        "name": "",
+        "topic": "",
+        "payload": "Turn on Light",
+        "payloadType": "str",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "x": 208.25,
+        "y": 420.5,
+        "wires": [
+            [
+                "f18ba43e.5a5ee8",
+                "e3ae6a8b.1ece78"
+            ]
+        ]
+    },
+    {
+        "id": "f18ba43e.5a5ee8",
+        "type": "ibmiot out",
+        "z": "d400c494.395b38",
+        "authentication": "apiKey",
+        "apiKey": "d864f188.555",
+        "outputType": "cmd",
+        "deviceId": "BBB1",
+        "deviceType": "beaglebone",
+        "eventCommandType": "Turn On Light",
+        "format": "string",
+        "data": "String",
+        "qos": 0,
+        "name": "IBM IoT",
+        "service": "registered",
+        "x": 561.0000076293945,
+        "y": 386.5000057220459,
+        "wires": []
+    },
+    {
+        "id": "aa9da2e9.b2784",
+        "type": "inject",
+        "z": "d400c494.395b38",
+        "name": "",
+        "topic": "",
+        "payload": "Turn off Light",
+        "payloadType": "str",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "x": 198.25,
+        "y": 506,
+        "wires": [
+            [
+                "f18ba43e.5a5ee8",
+                "6e1b9da4.b1d0a4"
+            ]
+        ]
+    },
+    {
+        "id": "e3ae6a8b.1ece78",
+        "type": "debug",
+        "z": "d400c494.395b38",
+        "name": "out1",
+        "active": true,
+        "console": "false",
+        "complete": "payload",
+        "x": 551.2500076293945,
+        "y": 472.50000762939453,
+        "wires": []
+    },
+    {
+        "id": "6e1b9da4.b1d0a4",
+        "type": "debug",
+        "z": "d400c494.395b38",
+        "name": "out2",
+        "active": true,
+        "console": "false",
+        "complete": "payload",
+        "x": 551.2500076293945,
+        "y": 545.0000076293945,
+        "wires": []
+    },
+    {
+        "id": "89b8ccc4.47ed5",
+        "type": "e-mail in",
+        "z": "d400c494.395b38",
+        "name": "email",
+        "protocol": "IMAP",
+        "server": "imap.gmail.com",
+        "useSSL": true,
+        "port": "993",
+        "box": "INBOX",
+        "disposition": "Read",
+        "repeat": "30",
+        "x": 177.50000381469727,
+        "y": 322.50000381469727,
+        "wires": [
+            [
+                "f18ba43e.5a5ee8",
+                "d1be662c.e21ae8"
+            ]
+        ]
+    },
+    {
+        "id": "d1be662c.e21ae8",
+        "type": "debug",
+        "z": "d400c494.395b38",
+        "name": "Email",
+        "active": true,
+        "console": "false",
+        "complete": "payload",
+        "x": 553.7500076293945,
+        "y": 305.00000381469727,
+        "wires": []
+    },
+    {
+        "id": "4a6d00b1.03ea7",
+        "type": "inject",
+        "z": "d400c494.395b38",
+        "name": "",
+        "topic": "",
+        "payload": "Invalid Command",
+        "payloadType": "str",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "x": 219,
+        "y": 583.5,
+        "wires": [
+            [
+                "f18ba43e.5a5ee8"
+            ]
+        ]
+    },
+    {
+        "id": "d864f188.555",
+        "type": "ibmiot",
+        "z": "",
+        "name": "beaglebone",
+        "keepalive": "60",
+        "cleansession": true,
+        "appId": "",
+        "shared": false
+    }
+]
