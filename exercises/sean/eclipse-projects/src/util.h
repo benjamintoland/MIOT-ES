@@ -1,5 +1,5 @@
 /*
- * PWM.cpp  Created on: 29 Apr 2014
+ * Util.h  Created on: 11 May 2014
  * Copyright (c) 2014 Derek Molloy (www.derekmolloy.ie)
  * Made available for the book "Exploring BeagleBone" 
  * See: www.exploringbeaglebone.com
@@ -22,14 +22,19 @@
  * For more details, see http://www.derekmolloy.ie/
  */
 
-#include "PWM.h"
+#ifndef UTIL_H_
+#define UTIL_H_
+#include<string>
+using std::string;
 
-PWM::PWM() {
-	// TODO Auto-generated constructor stub
+namespace exploringBB {
 
-}
 
-PWM::~PWM() {
-	// TODO Auto-generated destructor stub
-}
+int write(string path, string filename, string value);
+int write(string path, string filename, int value);
+string read(string path, string filename);
 
+
+} /* namespace exploringBB */
+
+#endif /* UTIL_H_ */
