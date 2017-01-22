@@ -5,27 +5,28 @@
 * directory for copyright and GNU GPLv3 license information.            */
 
 #include <iostream>
-#include <unistd.h> // for usleep
-#include <fstream>	// tmp36
-#include <string>	// tmp36
-#include <sstream>	// tmp36
-#include <stdlib.h>	// tmp36
-#include <math.h>	// Grove Temperature sensor
+#include <unistd.h>
+#include <fstream>		// tmp36
+#include <string>		// tmp36
+#include <sstream>		// tmp36
+#include <stdlib.h>		// tmp36
+#include <math.h>		// Grove Temperature sensor
 #include <pthread.h>
-#include <iomanip>	// Check this out??
-#include "GPIO.h"	// GPIO functions
-#include "PWM.h"	// For PWM
+#include <iomanip>
+#include "GPIO.h"		// GPIO functions
+#include "PWM.h"		// For PWM
 #include "I2CDevice.h"	// I2C devices
-#include "util.h"
+#include "util.h"		// Needed for PWM
+
 using namespace exploringBB;
 using namespace std;
 
 #define TEMPSENS_PATH "/sys/bus/iio/devices/iio:device0/in_voltage"	// tmp36 Path changed from LDR
-#define SLOTS "/sys/devices/bone_capemgr.9/slots"	// Our BBB has this loaded into .profile but other systems may not
+#define SLOTS "/sys/devices/bone_capemgr.9/slots"					// Our BBB has this loaded into .profile but other systems may not
 
 // Declaring the variables
-const int B = 4275;	// B value of thermistor from Grove sensor code
-int count = 0;		// See if I can get this else where
+const int B = 4275;		// B value of thermistor from Grove sensor code
+int count = 0;			// Set to read value to change state
 
 
 /* Code from A TMP36 temperature sensor application
@@ -58,11 +59,11 @@ int callbackFunction(int var){
 		{
 			system("date");		// Add script at boot to get current time
 		}
-				count++;		// Do I need a callback?
+				count++;
 				return var;
 }
 
-
+// Program runs from here
 int main(int argc, char* argv[])
 {
 
@@ -87,9 +88,10 @@ int main(int argc, char* argv[])
 
 
 	// Enable Backlight and LCD
-
+	// Declaring Character array variables for the LCD
 	char row0 [16];					// Row 0 with 16 character array for LCD
 	char row1 [16];					// Row 1 with 16 character array for LCD
+	char tdc [5];					// TDC array to put Temperature Degrees C on end of Row 1
 
 	I2CDevice BL(1, 0x62);			// Enable Backlight on I2C
 	BL.open();
@@ -98,7 +100,7 @@ int main(int argc, char* argv[])
 	BL.writeRegister(0x01, 0x20);
 //	BL.writeRegister(0x02, 0x55);	// Backlight Blue medium
 //	BL.writeRegister(0x03, 0x55);	// Backlight Green medium
-//	BL.writeRegister(0x04, 0x55);	// Backlight Red medium		RGB together gives White Backlight
+//	BL.writeRegister(0x04, 0x55);	// Backlight Red medium		RGB together gives White Backlight, not used
 
 	I2CDevice LCD(1,0x3E);			// Enable LCD on I2C
 	LCD.open();
@@ -109,8 +111,7 @@ int main(int argc, char* argv[])
 
 
 	/* Rest of temperature code, added DTO BB-ADC to SLOTS code
-	 * Outputs ADC and Temperature values to console
-	 * Need to do further work on this later */
+	 * Outputs ADC and Temperature values to console */
 
 	int ain = 0;
 	cout << "Starting the Temperature Sensor program" << endl;
@@ -120,37 +121,31 @@ int main(int argc, char* argv[])
 	float temperature = getTemperature(value);				// Get initial Temperature to see what state to enter
 	cout << "The temperatures is: " << temperature << " degrees Celsius." << endl;
 
-//	usleep(50000);
-
-
 
 	// Enable GPIO for LED and Servo
 
-	PWM pwm("pwm_test_P9_22.13");		// Creating PWM object for servo control***
+	PWM pwm("pwm_test_P9_22.13");		// Creating PWM object for servo control
 
 	GPIO outGPIO1(14), outGPIO2(2);		// 14 is LED and 2 is Servo
 
 	outGPIO1.setDirection(OUTPUT);		// Output to LED
-	outGPIO1.setValue(LOW);				// LED Off			Does this need to be here?
+//	outGPIO1.setValue(LOW);				// LED Off			Does not need to be here
 
 	outGPIO2.setDirection(OUTPUT);		// Output to Servo
-	outGPIO2.setValue(LOW);				// 					Does this need to be here?
+//	outGPIO2.setValue(LOW);				// 					Does not need to be here
 
 	pwm.setPeriod(20000000);			// Period in ns
 	pwm.setPolarity(PWM::ACTIVE_HIGH);	// Set Polarity to 0
 
 
-
-
-/*
+/*	Could not get it to work by this method, used PWM from Exploring BB
     system("echo 0 > run");				// Turn off PWM
     system("echo 0 > polarity");		// Set Pulse polarity
 	system("echo 20000000 > period");	// Set Period = 20ms
 */
 
-
-
-	while(1)			// Check this out***
+	// Had to put these in a while loop as when used in each state, got stuck in that state
+	while(1)
 	{
 		LCD.writeRegister(0x80, 0x28);				// 2 line mode
 		LCD.writeRegister(0x80, 0x0C);				// Switch on, No blinking
@@ -163,13 +158,12 @@ int main(int argc, char* argv[])
 	// State 1 - COLD
 	// LED Heat On and Vent Shut
 
-	if ((value <= 2050)&&(count%2==0))				// Change this value later***
+	if ((value <= 1800)&&(count%2==0))				// 1800ADC = 20C. Change this value if you need to.
 	{
 		outGPIO1.setValue(HIGH);					// Turn LED On
 
-		outGPIO2.setValue(LOW);						// Check this out later****
-//		pwm.setDutyCycle(10.5f);					// 2100000ns	Brighter	Servo Max
-		pwm.setDutyCycle(2.5f);						// 500000ns		Dim			Servo Min
+		outGPIO2.setValue(LOW);						// My servo is fried, so used LED and trial and error to figure out Duty Cycles
+		pwm.setDutyCycle(2.5f);						// 500000ns		LED Dim		Servo Min
 		pwm.run();									// Start the output
 
 /*
@@ -198,25 +192,28 @@ int main(int argc, char* argv[])
 		BL.writeRegister(0x04, 0x00);				// Backlight Red Off
 
 		sprintf(row0, "HeatON .VentSHUT");			// Row 0 character array
-
-		char tdc[5];
-		int s = temperature;
-		sprintf(tdc, "%d", s);
-		sprintf(row1, "Degrees C:", tdc);			// Row 1 character array, Need to show Temperature***
-
+		sprintf(row1, "Degrees C:");				// Row 1 character array text
+		sprintf(tdc, "%0.1f", temperature);			// Convert and pass the float variable temperature to 1 decimal place to character array tdc
 
 		int i=0;									// This loop passes text to the character array
-			while(row0[i]!='\0')
+		while(row0[i]!='\0')
 			{
-				LCD.writeRegister(0x40, row0[i]);	// Write text to Row 0 from character array in increments
-				i++;
+			LCD.writeRegister(0x40, row0[i]);		// Write text to Row 0 from character array in increments
+			i++;
 			}
 		LCD.writeRegister(0x80, 0xC0);				// Set courser position to Row 1
-			i=0;
-			while(row1[i]!='\0')
+		i=0;
+		while(row1[i]!='\0')
 			{
-				LCD.writeRegister(0x40, row1[i]);	// Write text to Row 1 from character array in increments
-				i++;
+			LCD.writeRegister(0x40, row1[i]);		// Write text to Row 1 from character array in increments
+			i++;
+			}
+		LCD.writeRegister(0x80, 0xCB);				// Set courser position to Row 1 cursor 13 to display temperature
+		i=0;
+		while(tdc[i]!='\0')
+			{
+			LCD.writeRegister(0x40, tdc[i]);		// Write temperature to Row 1 cursor 13 from character array in increments
+			i++;
 			}
 	}
 
@@ -224,23 +221,14 @@ int main(int argc, char* argv[])
 	// State 2 - GRAND
 	// LED Heat Off and Vent Shut
 
-	else if ((value >2050)&&(value <2100)&&(count%2==0))			// Change value later??
+	else if ((value >1800)&&(value <2050)&&(count%2==0))	// 1800-2050ADC = 20-25C. Change these values if you need to.
 	{
-		outGPIO1.setValue(LOW);						// Heater Off
+		outGPIO1.setValue(LOW);						// LED Off
 
-		outGPIO2.setValue(LOW);						// Check this out later****
-//		pwm.setDutyCycle(10.5f);					// 2100000ns	Brighter	Servo Max
-		pwm.setDutyCycle(2.5f);						// 500000ns		Dim			Servo Min
+		outGPIO2.setValue(LOW);
+		pwm.setDutyCycle(2.5f);						// 500000ns		LED Dim		Servo Min
 		pwm.run();									// Start the output
 
-
-/*
-	    system("echo 0 > run");						// Turn off
-//	    system("echo 0 > polarity");				// Already declared in GPIO Enable
-//		system("echo 20000000 > period");			// Already declared in GPIO Enable
-		system("echo 500000 > duty");				// Duty cycle to Close Vent
-		system("echo 1 > run");						// Turn on
-*/
 
 		// Output these to console
 		cout << "STATE 2 - GRAND" << endl;
@@ -256,20 +244,28 @@ int main(int argc, char* argv[])
 		BL.writeRegister(0x04, 0x00);				// Backlight Red Off
 
 		sprintf(row0, "HeatOFF.VentSHUT");			// Row 0 character array
-		sprintf(row1, "Degrees C:");				// Row 1 character array, Need to show Temperature***
+		sprintf(row1, "Degrees C:");				// Row 1 character array text
+		sprintf(tdc, "%0.1f", temperature);			// Convert and pass the float variable temperature to 1 decimal place to character array tdc
 
 		int i=0;									// This loop passes text to the character array
 		while(row0[i]!='\0')
-		{
+			{
 			LCD.writeRegister(0x40, row0[i]);		// Write text to Row 0 from character array in increments
 			i++;
-		}
+			}
 		LCD.writeRegister(0x80, 0xC0);				// Set courser position to Row 1
-			i=0;
-			while(row1[i]!='\0')
+		i=0;
+		while(row1[i]!='\0')
 			{
-				LCD.writeRegister(0x40, row1[i]);	// Write text to Row 1 from character array in increments
-				i++;
+			LCD.writeRegister(0x40, row1[i]);		// Write text to Row 1 from character array in increments
+			i++;
+			}
+		LCD.writeRegister(0x80, 0xCB);				// Set courser position to Row 1 cursor 13 to display temperature
+		i=0;
+		while(tdc[i]!='\0')
+			{
+			LCD.writeRegister(0x40, tdc[i]);		// Write temperature to Row 1 cursor 13 from character array in increments
+			i++;
 			}
 	}
 
@@ -277,23 +273,13 @@ int main(int argc, char* argv[])
 		// State 3 - HOT
 		// LED Heat Off and Vent Open
 
-	else if ((value >=2100)&&(count%2==0))			//Change value later	2100 = 26C
+	else if ((value >=2050)&&(count%2==0))			// 2050ADC = 25C.  Change this value if you need to.
 	{
-		outGPIO1.setValue(LOW);						// Heater Off
+		outGPIO1.setValue(LOW);						// LED Off
 
 		outGPIO2.setValue(LOW);						// Vent Open
-		outGPIO2.setValue(LOW);						// Check this out later****
-		pwm.setDutyCycle(10.5f);					// 2100000ns	Brighter	Servo Max
-//		pwm.setDutyCycle(2.5f);						// 500000ns		Dim			Servo Min
+		pwm.setDutyCycle(10.5f);					// 2100000ns	LED Brighter	Servo Max
 		pwm.run();									// Start the output
-
-/*
-	    system("echo 0 > run");						// Turn off
-//	    system("echo 0 > polarity");				// Already declared in GPIO Enable
-//		system("echo 20000000 > period");			// Already declared in GPIO Enable
-		system("echo 2100000 > duty");				// Vent Open
-		system("echo 1 > run");						// Turn on
-*/
 
 
 		// Output these to console
@@ -310,51 +296,32 @@ int main(int argc, char* argv[])
 		BL.writeRegister(0x04, 0x55);				// Backlight Red On - HOT
 
 		sprintf(row0, "HeatOFF.VentOPEN");			// Row 0 character array
-		sprintf(row1, "Degrees C:");				// Row 1 character array, Need to show Temperature***
+		sprintf(row1, "Degrees C:");				// Row 1 character array
+		sprintf(tdc, "%0.1f", temperature);			// Convert and pass the float variable temperature to 1 decimal place to character array tdc
 
 		int i=0;									// This loop passes text to the character array
 		while(row0[i]!='\0')
-		{
+			{
 			LCD.writeRegister(0x40, row0[i]);		// Write text to Row 0 from character array in increments
 			i++;
-		}
+			}
 		LCD.writeRegister(0x80, 0xC0);				// Set courser position to Row 1
-			i=0;
-			while(row1[i]!='\0')
+		i=0;
+		while(row1[i]!='\0')
 			{
-				LCD.writeRegister(0x40, row1[i]);	// Write text to Row 1 from character array in increments
-				i++;
+			LCD.writeRegister(0x40, row1[i]);		// Write text to Row 1 from character array in increments
+			i++;
+			}
+		LCD.writeRegister(0x80, 0xCB);				// Set courser position to Row 1 cursor 13 to display temperature
+		i=0;
+		while(tdc[i]!='\0')
+			{
+			LCD.writeRegister(0x40, tdc[i]);		// Write temperature to Row 1 cursor 13 from character array in increments
+			i++;
 			}
 
 	}
 
-
-
-/*
-		ostringstream s;				// To combine text and int data
-		s.str("");
-		LCD.writeRegister(0x80, 0xc0);	// Row 1, Col 0
-		s << "Temp Deg C: " << temperature;
-		printf(s.str());
-
-*/
-
-
-
-/*
-	outGPIO.setDirection(OUTPUT);
-    outGPIO.setValue(LOW);
-
-
-   if (value >= 1900)
-    {
-    	system("echo 0 > run");
-    	system("echo 0 > polarity");
-		system("echo 20000000 > period");
-		system("echo 200000 > duty");	// Max open
-		system("echo 1 > run");
-    }
-*/
 
 	}
 	return 0;
