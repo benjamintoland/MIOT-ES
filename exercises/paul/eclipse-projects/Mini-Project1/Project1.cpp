@@ -23,14 +23,15 @@ using namespace std;
 #define TEMPSENS_PATH "/sys/bus/iio/devices/iio:device0/in_voltage"	// tmp36 Path changed from LDR
 #define SLOTS "/sys/devices/bone_capemgr.9/slots"	// Our BBB has this loaded into .profile but other systems may not
 
+// Declaring the variables
 const int B = 4275;	// B value of thermistor from Grove sensor code
-
 int count = 0;		// See if I can get this else where
+
 
 /* Code from A TMP36 temperature sensor application
  * Conversion values from Grove temperature Sensor code*/
 
-int readAnalog(int number){ // returns the input as an int
+int readAnalog(int number){ 					// returns the input as an int
 	stringstream ss;
 	ss << TEMPSENS_PATH << number << "_raw";
 	fstream fs;
@@ -40,29 +41,32 @@ int readAnalog(int number){ // returns the input as an int
 	return number;
 }
 
+
 float getTemperature(int adc_value){
-    float R = 4096.0/((float)adc_value)-1.0;	// Vcc = 5V for Temperature Sensor, Range = 0-4095
+    float R = 4095.0/((float)adc_value)-1.0;	// Vcc = 5V for Temperature Sensor, Range = 0-4095
     R = 100000.0*R;
     float temperature = 1.0/(log(R/100000.0)/B+1/298.15)-273.15;
     return (temperature);
 }
 
-// Button Press with current time displayed
+
+// Button Press with current time displayed, Need to get date to show***
 
 int callbackFunction(int var){
 	cout << "BBB Button Pressed!" << var << endl;
 		if(count%2==0)
 		{
-			system("date");	// Add script at boot to get current time
+			system("date");		// Add script at boot to get current time
 		}
-				count++;	// Do I need a callback?
+				count++;		// Do I need a callback?
 				return var;
 }
 
 
-int main(int argc, char* argv[]){
+int main(int argc, char* argv[])
+{
 
-	if(system("echo BB-ADC > $SLOTS"))	// Check or Load DTO to enable Analog input for Temperature Sensor
+	if(system("echo BB-ADC > $SLOTS"))			// Check or Load DTO to enable Analog input for Temperature Sensor
 	{
 		cout << "DTO BB-ADC for Analog inputs already loaded\n" << endl;
 	}
@@ -78,140 +82,252 @@ int main(int argc, char* argv[]){
 	else
 	{
 		cout << "DTO PWM P9_22 for Servo loaded\n" << endl;
-		system("echo am33xx_pwm > $SLOTS");	// Enable hardware on SOC
+		system("echo am33xx_pwm > $SLOTS");		// Enable hardware on SOC
 	}
 
-// Enable Backlight and LCD
 
-	char row1 [16];
-	char row2 [16];
+	// Enable Backlight and LCD
 
-	I2CDevice BL(1, 0x62);			// Enable Backlight
+	char row0 [16];					// Row 0 with 16 character array for LCD
+	char row1 [16];					// Row 1 with 16 character array for LCD
+
+	I2CDevice BL(1, 0x62);			// Enable Backlight on I2C
 	BL.open();
-	BL.writeRegister(0x00, 0x00);	// Initialise registers
-	BL.writeRegister(0x08, 0xff);
+	BL.writeRegister(0x00, 0x00);	// Initialise registers x 3
+	BL.writeRegister(0x08, 0xFF);
 	BL.writeRegister(0x01, 0x20);
-	BL.writeRegister(0x02, 0x55);	// Backlight Blue medium
-	BL.writeRegister(0x03, 0x55);	// Backlight Green medium
-	BL.writeRegister(0x04, 0x55);	// Backlight Red medium
+//	BL.writeRegister(0x02, 0x55);	// Backlight Blue medium
+//	BL.writeRegister(0x03, 0x55);	// Backlight Green medium
+//	BL.writeRegister(0x04, 0x55);	// Backlight Red medium		RGB together gives White Backlight
 
-	I2CDevice LCD(1,0x3e);			// Enable LCD
+	I2CDevice LCD(1,0x3E);			// Enable LCD on I2C
 	LCD.open();
 	LCD.writeRegister(0x80, 0x01);	// Clear screen
 	LCD.writeRegister(0x80, 0x28);	// 2 line mode
-	LCD.writeRegister(0x80, 0x0f);	// Switch on with blinking
+	LCD.writeRegister(0x80, 0x0C);	// Switch on, No blinking
 	LCD.writeRegister(0x80, 0x02);	// Cursor Home
 
 
-/*
-	LCD.writeRegister(0x80, 0x82);	// R0C2
-	LCD.writeRegister(0x40, 0x33);	// Print 3
-	LCD.writeRegister(0x80, 0x84);	// R0C4
-	LCD.writeRegister(0x40, 0x31);	// Print 1
-	LCD.writeRegister(0x80, 0xc5);	// R1C5
-	LCD.writeRegister(0x40, 0x32);	// Print 2
-*/
-
-
+	/* Rest of temperature code, added DTO BB-ADC to SLOTS code
+	 * Outputs ADC and Temperature values to console
+	 * Need to do further work on this later */
 
 	int ain = 0;
 	cout << "Starting the Temperature Sensor program" << endl;
 	if (argc>1) ain = atoi(argv[1]);
 	int value = readAnalog(ain);
-	cout << "The ADC value is: " << value << endl;	// Remove at later stage
-	float temperature = getTemperature(value);
+	cout << "The ADC value is: " << value << endl;
+	float temperature = getTemperature(value);				// Get initial Temperature to see what state to enter
 	cout << "The temperatures is: " << temperature << " degrees Celsius." << endl;
-	usleep(50000);
 
-	/* End of temperature code, need to do further work on this later
-	 * added DTO BB-ADC to SLOTS code
-	 */
+//	usleep(50000);
 
 
 
+	// Enable GPIO for LED and Servo
 
-	// Enable GPIO
+	PWM pwm("pwm_test_P9_22.13");		// Creating PWM object for servo control***
 
-	PWM pwm("pwm_test_P9_22.13");
+	GPIO outGPIO1(14), outGPIO2(2);		// 14 is LED and 2 is Servo
 
-	GPIO outGPIO1(14), outGPIO2(2);	// 14 is LED and 2 is Servo
+	outGPIO1.setDirection(OUTPUT);		// Output to LED
+	outGPIO1.setValue(LOW);				// LED Off			Does this need to be here?
 
-	outGPIO1.setDirection(OUTPUT);
-	outGPIO1.setValue(LOW);			// Does this need to be here?
+	outGPIO2.setDirection(OUTPUT);		// Output to Servo
+	outGPIO2.setValue(LOW);				// 					Does this need to be here?
 
-	outGPIO2.setDirection(OUTPUT);
-	outGPIO2.setValue(LOW);			// Does this need to be here?
-    system("echo 0 > run");				// Turn off
+	pwm.setPeriod(20000000);			// Period in ns
+	pwm.setPolarity(PWM::ACTIVE_HIGH);	// Set Polarity to 0
+
+
+
+
+/*
+    system("echo 0 > run");				// Turn off PWM
     system("echo 0 > polarity");		// Set Pulse polarity
 	system("echo 20000000 > period");	// Set Period = 20ms
+*/
 
-	while(1)
 
+
+	while(1)			// Check this out***
 	{
+		LCD.writeRegister(0x80, 0x28);				// 2 line mode
+		LCD.writeRegister(0x80, 0x0C);				// Switch on, No blinking
+		LCD.writeRegister(0x80, 0x02);				// Cursor Home
 
-	// LED Heater On
+		int value = readAnalog(ain);
+		float temperature = getTemperature(value);	// Did not work within individual States
 
-	if ((value <= 2000)&&(count%2==0));					// Change this value later
+
+	// State 1 - COLD
+	// LED Heat On and Vent Shut
+
+	if ((value <= 2050)&&(count%2==0))				// Change this value later***
 	{
-		outGPIO1.setValue(HIGH);		// Turn LED On
-		cout << "Heater On, Vent Closed" << endl;
+		outGPIO1.setValue(HIGH);					// Turn LED On
 
-		sprintf(row1, "HeatON.VentCLOSE");
-		sprintf(row2, "Degrees C:");
-		LCD.writeRegister(0x80, 0x01);	// Clear screen
-		LCD.writeRegister(0x80, 0x80);	// Row 0, Col 0 change to Home
-			int i=0;
-			while(row1[i]!='\0');
+		outGPIO2.setValue(LOW);						// Check this out later****
+//		pwm.setDutyCycle(10.5f);					// 2100000ns	Brighter	Servo Max
+		pwm.setDutyCycle(2.5f);						// 500000ns		Dim			Servo Min
+		pwm.run();									// Start the output
+
+/*
+	    system("echo 0 > run");						// Turn off
+//	    system("echo 0 > polarity");				// Already declared in GPIO Enable
+//		system("echo 20000000 > period");			// Already declared in GPIO Enable
+		system("echo 500000 > duty");				// Duty cycle to Close Vent
+		system("echo 1 > run");						// Turn on
+*/
+
+/*
+		int value = readAnalog(ain);
+		float temperature = getTemperature(value);	// Does not work here, moved to while loop
+*/
+
+		// Output these to console
+		cout << "STATE 1 - COLD" << endl;
+		cout << "Heat On, Vent Shut" << endl;
+		cout << "The temperatures is: " << temperature << " degrees Celsius." << endl;
+		cout << "The ADC value is: " << value << endl;
+
+//		LCD.writeRegister(0x80, 0x01);				// Clear screen
+//		LCD.writeRegister(0x80, 0x02);				// Cursor Home.		Moved to while loop, does not work here
+		BL.writeRegister(0x02, 0x99);				// Backlight Blue medium - Cold
+		BL.writeRegister(0x03, 0x00);				// Backlight Green Off
+		BL.writeRegister(0x04, 0x00);				// Backlight Red Off
+
+		sprintf(row0, "HeatON .VentSHUT");			// Row 0 character array
+
+		char tdc[5];
+		int s = temperature;
+		sprintf(tdc, "%d", s);
+		sprintf(row1, "Degrees C:", tdc);			// Row 1 character array, Need to show Temperature***
+
+
+		int i=0;									// This loop passes text to the character array
+			while(row0[i]!='\0')
 			{
-				LCD.writeRegister(0x40, row1[i]);
+				LCD.writeRegister(0x40, row0[i]);	// Write text to Row 0 from character array in increments
 				i++;
 			}
-			LCD.writeRegister(0x80, 0xc0);
-				i=0;
-				while(row2[i]!='\0');
-				{
-					LCD.writeRegister(0x40, row2[i]);
-					i++;
-				}
-	}
-
-		// Vent Open
-
-	else if ((value >=2200)&&(count%2==0));	//Change value later
-	{
-		outGPIO2.setValue(LOW);
-		cout << "Vent Open, Heater Off" << endl;
-
-	    system("echo 0 > run");				// Turn off
-//	    system("echo 0 > polarity");
-//		system("echo 20000000 > period");	// Period = 20ms
-		system("echo 200000 > duty");		// Max open
-		system("echo 1 > run");				// Turn on
-
-		sprintf(row1, "VentOPEN.HeatOFF");
-		sprintf(row2, "Degrees C:");
-		LCD.writeRegister(0x80, 0x01);	// Clear screen
-		LCD.writeRegister(0x80, 0x80);	// Row 0, Col 0 change to Home
-			int i=0;
-			while(row1[i]!='\0');
+		LCD.writeRegister(0x80, 0xC0);				// Set courser position to Row 1
+			i=0;
+			while(row1[i]!='\0')
 			{
-				LCD.writeRegister(0x40, row1[i]);
+				LCD.writeRegister(0x40, row1[i]);	// Write text to Row 1 from character array in increments
 				i++;
 			}
-			LCD.writeRegister(0x80, 0xc0);
-				i=0;
-				while(row2[i]!='\0');
-				{
-					LCD.writeRegister(0x40, row2[i]);
-					i++;
-				}
-
 	}
 
-	else
+
+	// State 2 - GRAND
+	// LED Heat Off and Vent Shut
+
+	else if ((value >2050)&&(value <2100)&&(count%2==0))			// Change value later??
 	{
-		cout << "Time is" << endl;
+		outGPIO1.setValue(LOW);						// Heater Off
+
+		outGPIO2.setValue(LOW);						// Check this out later****
+//		pwm.setDutyCycle(10.5f);					// 2100000ns	Brighter	Servo Max
+		pwm.setDutyCycle(2.5f);						// 500000ns		Dim			Servo Min
+		pwm.run();									// Start the output
+
+
+/*
+	    system("echo 0 > run");						// Turn off
+//	    system("echo 0 > polarity");				// Already declared in GPIO Enable
+//		system("echo 20000000 > period");			// Already declared in GPIO Enable
+		system("echo 500000 > duty");				// Duty cycle to Close Vent
+		system("echo 1 > run");						// Turn on
+*/
+
+		// Output these to console
+		cout << "STATE 2 - GRAND" << endl;
+		cout << "Heat Off, Vent Shut" << endl;
+		cout << "The temperatures is: " << temperature << " degrees Celsius." << endl;
+		cout << "The ADC value is: " << value << endl;
+
+		// Output to LCD
+//		LCD.writeRegister(0x80, 0x01);				// Clear screen
+//		LCD.writeRegister(0x80, 0x02);				// Cursor Home.		Moved to while loop, does not work here
+		BL.writeRegister(0x02, 0x00);				// Backlight Blue Off
+		BL.writeRegister(0x03, 0x55);				// Backlight Green On
+		BL.writeRegister(0x04, 0x00);				// Backlight Red Off
+
+		sprintf(row0, "HeatOFF.VentSHUT");			// Row 0 character array
+		sprintf(row1, "Degrees C:");				// Row 1 character array, Need to show Temperature***
+
+		int i=0;									// This loop passes text to the character array
+		while(row0[i]!='\0')
+		{
+			LCD.writeRegister(0x40, row0[i]);		// Write text to Row 0 from character array in increments
+			i++;
+		}
+		LCD.writeRegister(0x80, 0xC0);				// Set courser position to Row 1
+			i=0;
+			while(row1[i]!='\0')
+			{
+				LCD.writeRegister(0x40, row1[i]);	// Write text to Row 1 from character array in increments
+				i++;
+			}
 	}
+
+
+		// State 3 - HOT
+		// LED Heat Off and Vent Open
+
+	else if ((value >=2100)&&(count%2==0))			//Change value later	2100 = 26C
+	{
+		outGPIO1.setValue(LOW);						// Heater Off
+
+		outGPIO2.setValue(LOW);						// Vent Open
+		outGPIO2.setValue(LOW);						// Check this out later****
+		pwm.setDutyCycle(10.5f);					// 2100000ns	Brighter	Servo Max
+//		pwm.setDutyCycle(2.5f);						// 500000ns		Dim			Servo Min
+		pwm.run();									// Start the output
+
+/*
+	    system("echo 0 > run");						// Turn off
+//	    system("echo 0 > polarity");				// Already declared in GPIO Enable
+//		system("echo 20000000 > period");			// Already declared in GPIO Enable
+		system("echo 2100000 > duty");				// Vent Open
+		system("echo 1 > run");						// Turn on
+*/
+
+
+		// Output these to console
+		cout << "STATE 3 - HOT" << endl;
+		cout << "Heater Off, Vent Open" << endl;
+		cout << "The temperatures is: " << temperature << " degrees Celsius." << endl;
+		cout << "The ADC value is: " << value << endl;
+
+		// Output to LCD
+//		LCD.writeRegister(0x80, 0x01);				// Clear screen
+//		LCD.writeRegister(0x80, 0x02);				// Cursor Home.		Moved to while loop, does not work here
+		BL.writeRegister(0x02, 0x00);				// Backlight Blue Off
+		BL.writeRegister(0x03, 0x00);				// Backlight Green Off
+		BL.writeRegister(0x04, 0x55);				// Backlight Red On - HOT
+
+		sprintf(row0, "HeatOFF.VentOPEN");			// Row 0 character array
+		sprintf(row1, "Degrees C:");				// Row 1 character array, Need to show Temperature***
+
+		int i=0;									// This loop passes text to the character array
+		while(row0[i]!='\0')
+		{
+			LCD.writeRegister(0x40, row0[i]);		// Write text to Row 0 from character array in increments
+			i++;
+		}
+		LCD.writeRegister(0x80, 0xC0);				// Set courser position to Row 1
+			i=0;
+			while(row1[i]!='\0')
+			{
+				LCD.writeRegister(0x40, row1[i]);	// Write text to Row 1 from character array in increments
+				i++;
+			}
+
+	}
+
 
 
 /*
@@ -239,7 +355,8 @@ int main(int argc, char* argv[]){
 		system("echo 1 > run");
     }
 */
-	}
 
+	}
 	return 0;
+
 }

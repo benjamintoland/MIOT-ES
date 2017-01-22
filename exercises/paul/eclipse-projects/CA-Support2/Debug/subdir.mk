@@ -5,15 +5,21 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
 ../GPIO.cpp \
-../simple.cpp 
+../PWM.cpp \
+../simple.cpp \
+../util.cpp 
 
 OBJS += \
 ./GPIO.o \
-./simple.o 
+./PWM.o \
+./simple.o \
+./util.o 
 
 CPP_DEPS += \
 ./GPIO.d \
-./simple.d 
+./PWM.d \
+./simple.d \
+./util.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
