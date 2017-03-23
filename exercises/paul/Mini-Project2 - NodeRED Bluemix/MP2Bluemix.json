@@ -1,0 +1,158 @@
+[
+    {
+        "id": "df4c7049.81ad1",
+        "type": "ibmiot in",
+        "z": "bb5631fe.e7361",
+        "authentication": "apiKey",
+        "apiKey": "e606a9a4.cc5eb",
+        "inputType": "evt",
+        "deviceId": "",
+        "applicationId": "",
+        "deviceType": "+",
+        "eventType": "+",
+        "commandType": "",
+        "format": "json",
+        "name": "IBM IoT",
+        "service": "registered",
+        "allDevices": "",
+        "allApplications": "",
+        "allDeviceTypes": true,
+        "allEvents": true,
+        "allCommands": "",
+        "allFormats": "",
+        "qos": 0,
+        "x": 180.49998474121094,
+        "y": 100.40000915527344,
+        "wires": [
+            [
+                "a82f46b0.fcdfd"
+            ]
+        ]
+    },
+    {
+        "id": "a82f46b0.fcdfd",
+        "type": "debug",
+        "z": "bb5631fe.e7361",
+        "name": "",
+        "active": true,
+        "console": "false",
+        "complete": "payload",
+        "x": 535.5,
+        "y": 100.80000305175781,
+        "wires": []
+    },
+    {
+        "id": "abc8f899.8460b8",
+        "type": "ibmiot out",
+        "z": "bb5631fe.e7361",
+        "authentication": "apiKey",
+        "apiKey": "e606a9a4.cc5eb",
+        "outputType": "cmd",
+        "deviceId": "BBB1",
+        "deviceType": "BeagleBone",
+        "eventCommandType": "LED State",
+        "format": "string",
+        "data": "String",
+        "qos": 0,
+        "name": "IBM IoT",
+        "service": "registered",
+        "x": 526.5000610351562,
+        "y": 390.79998779296875,
+        "wires": []
+    },
+    {
+        "id": "2ee568b6.04b62",
+        "type": "inject",
+        "z": "bb5631fe.e7361",
+        "name": "",
+        "topic": "",
+        "payload": "Turn LED On",
+        "payloadType": "str",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "x": 173.49998474121094,
+        "y": 394,
+        "wires": [
+            [
+                "abc8f899.8460b8",
+                "b15dbe12.8bd7b"
+            ]
+        ]
+    },
+    {
+        "id": "b15dbe12.8bd7b",
+        "type": "debug",
+        "z": "bb5631fe.e7361",
+        "name": "LED Output Debug",
+        "active": true,
+        "console": "false",
+        "complete": "payload",
+        "x": 556.5,
+        "y": 281.8000030517578,
+        "wires": []
+    },
+    {
+        "id": "394d3a2d.935a6e",
+        "type": "inject",
+        "z": "bb5631fe.e7361",
+        "name": "",
+        "topic": "",
+        "payload": "Turn LED Off",
+        "payloadType": "str",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "x": 175.49998474121094,
+        "y": 281,
+        "wires": [
+            [
+                "abc8f899.8460b8",
+                "b15dbe12.8bd7b"
+            ]
+        ]
+    },
+    {
+        "id": "6815cdfb.7e7f7c",
+        "type": "e-mail in",
+        "z": "bb5631fe.e7361",
+        "name": "miot.test",
+        "protocol": "IMAP",
+        "server": "imap.gmail.com",
+        "useSSL": true,
+        "port": "993",
+        "box": "INBOX",
+        "disposition": "Read",
+        "repeat": "20",
+        "x": 160.5,
+        "y": 497,
+        "wires": [
+            [
+                "42c1aa04.1ad674",
+                "abc8f899.8460b8"
+            ]
+        ]
+    },
+    {
+        "id": "42c1aa04.1ad674",
+        "type": "debug",
+        "z": "bb5631fe.e7361",
+        "name": "Email",
+        "active": true,
+        "console": "false",
+        "complete": "payload",
+        "x": 512.5,
+        "y": 497.79998779296875,
+        "wires": []
+    },
+    {
+        "id": "e606a9a4.cc5eb",
+        "type": "ibmiot",
+        "z": "",
+        "name": "Node RED",
+        "keepalive": "60",
+        "cleansession": true,
+        "appId": "",
+        "shared": false
+    }
+]
