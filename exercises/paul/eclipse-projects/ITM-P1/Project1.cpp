@@ -26,12 +26,13 @@ using namespace std;
 
 // Declaring the variables
 
-const int B = 4275;			// B value of thermistor from Grove sensor code
-char datas [1000];			// Power On status and Unit ID
-char datatt [1000];			// Temperature, time stamp and Unit ID
-char statuscode[] = "On";	// Power On status code
-//char id[] = "BBBPMA";		// Unit ID - no longer needed - code added to read device hostname
-//int count = 0;			// Set to read value to change state???
+const int B = 4275;								// B value of thermistor from Grove sensor code
+char datas [1000];								// Power On status and Unit ID
+char datatt [1000];								// Temperature, time stamp and Unit ID
+char statuscode[] = "On";						// Power On status code
+//char id[] = "BBBPMA";							// Unit ID with fixed value - no longer needed - code added to read device hostname
+char hostname [1024];							// Unit ID now reads devices hostname
+char timeinfo [sizeof "2017-04-02T06:07:08Z"];	// To set time format and size to ISO8601
 
 
 /* Code from A TMP36 temperature sensor application
@@ -60,7 +61,6 @@ float getTemperature(int adc_value){
 int main(int argc, char* argv[])
 {
 
-
 	// Check or Load DTO to enable Analog input for Temperature Sensor
 
 	if(system("echo BB-ADC > $SLOTS"))
@@ -75,16 +75,23 @@ int main(int argc, char* argv[])
 
 	// Get Hostname of Device
 
-	char hostname[1024];
 	hostname[1023] = '\0';
 	gethostname(hostname, 1023);
-	cout << "Device On with Unit ID: " << hostname << endl;	// Output to console - hostname of device
-//	printf("Unit ID: %s\n", hostname);
+	cout << "Device On with Unit ID: " << hostname << endl;		// Output to console - hostname of device
+
+
+	// To get time in ISO8601 format, UTC
+
+    time_t now;
+    time(&now);
+    strftime(timeinfo, sizeof timeinfo, "%FT%TZ", gmtime(&now));
+	cout << "UTC Time is: " << timeinfo << endl;				// Output to console Time and Date
+//	system("date");												// Check Time and Date using system function - removed after testing
 
 
 	// Post to database - Unit ID and Power up status code
 
-	sprintf(datas, "curl -X POST -H \"Content-Type: application/json\" http://178.62.29.184/db/paul_db_a1 -d'{\"Unit_ID\":\"\%s\", \"Status\":\"\%s\"}'", hostname, statuscode);
+	sprintf(datas, "curl -X POST -H \"Content-Type: application/json\" http://178.62.29.184/db/paul_db_a1 -d'{\"Unit_ID\":\"\%s\", \"Time_Stamp\":\"\%s\", \"Status\":\"\%s\"}'", hostname, timeinfo, statuscode);
 	system(datas);
 	usleep(30000000);								// Usleep to pause program for 30 seconds to allow time between initial Post and subsequent temperature Post
 
@@ -112,11 +119,8 @@ int main(int argc, char* argv[])
 
     time_t now;
     time(&now);
-    char timeinfo[sizeof "2017-04-02T06:07:08Z"];
     strftime(timeinfo, sizeof timeinfo, "%FT%TZ", gmtime(&now));
-	cout << "UTC Time is: " << timeinfo << endl;	// Output to console Time and Date
-//	system("date");									// Check Time and Date using system function
-
+	cout << "UTC Time is: " << timeinfo << endl;				// Output to console Time and Date
 
 	// Using curl check connection to CouchDB database
 
